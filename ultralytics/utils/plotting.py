@@ -12,7 +12,7 @@ import torch
 from PIL import Image, ImageDraw, ImageFont
 from PIL import __version__ as pil_version
 
-from ultralytics.utils import LOGGER, TryExcept, ops, plt_settings, threaded
+from ultralytics.utils import LOGGER, TryExcept, ops, plt_settings, threaded, MAX_PIXELVALUE 
 from ultralytics.utils.checks import check_font, check_version, is_ascii
 from ultralytics.utils.files import increment_path
 
@@ -219,10 +219,10 @@ class Annotator:
             # Convert to numpy first
             self.im = np.asarray(self.im).copy()
         if len(masks) == 0:
-            self.im[:] = im_gpu.permute(1, 2, 0).contiguous().cpu().numpy() * 255
+            self.im[:] = im_gpu.permute(1, 2, 0).contiguous().cpu().numpy() * MAX_PIXELVALUE 
         if im_gpu.device != masks.device:
             im_gpu = im_gpu.to(masks.device)
-        colors = torch.tensor(colors, device=masks.device, dtype=torch.float32) / 255.0  # shape(n,3)
+        colors = torch.tensor(colors, device=masks.device, dtype=torch.float32) / float(MAX_PIXELVALUE)  # shape(n,3)
         colors = colors[:, None, None]  # shape(n,1,1,3)
         masks = masks.unsqueeze(3)  # shape(n,h,w,1)
         masks_color = masks * (colors * alpha)  # shape(n,h,w,3)
@@ -233,7 +233,7 @@ class Annotator:
         im_gpu = im_gpu.flip(dims=[0])  # flip channel
         im_gpu = im_gpu.permute(1, 2, 0).contiguous()  # shape(h,w,3)
         im_gpu = im_gpu * inv_alpha_masks[-1] + mcs
-        im_mask = im_gpu * 255
+        im_mask = im_gpu * MAX_PIXELVALUE 
         im_mask_np = im_mask.byte().cpu().numpy()
         self.im[:] = im_mask_np if retina_masks else ops.scale_image(im_mask_np, self.im.shape)
         if self.pil:
@@ -700,7 +700,7 @@ def plot_labels(boxes, cls, names=(), save_dir=Path(""), on_plot=None):
     ax = plt.subplots(2, 2, figsize=(8, 8), tight_layout=True)[1].ravel()
     y = ax[0].hist(cls, bins=np.linspace(0, nc, nc + 1) - 0.5, rwidth=0.8)
     for i in range(nc):
-        y[2].patches[i].set_color([x / 255 for x in colors(i)])
+        y[2].patches[i].set_color([x / MAX_PIXELVALUE for x in colors(i)])
     ax[0].set_ylabel("instances")
     if 0 < len(names) < 30:
         ax[0].set_xticks(range(len(names)))
@@ -713,7 +713,7 @@ def plot_labels(boxes, cls, names=(), save_dir=Path(""), on_plot=None):
     # Rectangles
     boxes[:, 0:2] = 0.5  # center
     boxes = ops.xywh2xyxy(boxes) * 1000
-    img = Image.fromarray(np.ones((1000, 1000, 3), dtype=np.uint8) * 255)
+    img = Image.fromarray(np.ones((1000, 1000, 3), dtype=np.uint8) * MAX_PIXELVALUE )
     for cls, box in zip(cls[:500], boxes[:500]):
         ImageDraw.Draw(img).rectangle(box, width=1, outline=colors(cls))  # plot
     ax[1].imshow(img)

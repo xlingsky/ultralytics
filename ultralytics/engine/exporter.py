@@ -86,6 +86,7 @@ from ultralytics.utils import (
     colorstr,
     get_default_args,
     yaml_save,
+    MAX_PIXELVALUE,
 )
 from ultralytics.utils.checks import check_imgsz, check_is_path_safe, check_requirements, check_version
 from ultralytics.utils.downloads import attempt_download_asset, get_github_assets, safe_download
@@ -474,7 +475,7 @@ class Exporter:
                 """Quantization transform function."""
                 data_item: torch.Tensor = data_item["img"] if isinstance(data_item, dict) else data_item
                 assert data_item.dtype == torch.uint8, "Input image must be uint8 for the quantization preprocessing"
-                im = data_item.numpy().astype(np.float32) / 255.0  # uint8 to fp16/32 and 0 - 255 to 0.0 - 1.0
+                im = data_item.numpy().astype(np.float32) / float(MAX_PIXELVALUE)  # uint8 to fp16/32 and 0 - 255 to 0.0 - 1.0
                 return np.expand_dims(im, 0) if im.ndim == 3 else im
 
             # Generate calibration data for integer quantization
@@ -607,7 +608,7 @@ class Exporter:
             shutil.rmtree(f)
 
         bias = [0.0, 0.0, 0.0]
-        scale = 1 / 255
+        scale = 1 / MAX_PIXELVALUE
         classifier_config = None
         if self.model.task == "classify":
             classifier_config = ct.ClassifierConfig(list(self.model.names.values())) if self.args.nms else None
@@ -757,7 +758,7 @@ class Exporter:
                 def get_batch(self, names) -> list:
                     """Get the next batch to use for calibration, as a list of device memory pointers."""
                     try:
-                        im0s = next(self.data_iter)["img"] / 255.0
+                        im0s = next(self.data_iter)["img"] / float(MAX_PIXELVALUE)
                         im0s = im0s.to("cuda") if im0s.device.type == "cpu" else im0s
                         return [int(im0s.data_ptr())]
                     except StopIteration:

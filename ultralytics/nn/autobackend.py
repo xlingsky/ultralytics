@@ -14,7 +14,7 @@ import torch
 import torch.nn as nn
 from PIL import Image
 
-from ultralytics.utils import ARM64, IS_JETSON, IS_RASPBERRYPI, LINUX, LOGGER, ROOT, yaml_load
+from ultralytics.utils import ARM64, IS_JETSON, IS_RASPBERRYPI, LINUX, LOGGER, ROOT, yaml_load, MAX_PIXELVALUE 
 from ultralytics.utils.checks import check_requirements, check_suffix, check_version, check_yaml
 from ultralytics.utils.downloads import attempt_download_asset, is_url
 
@@ -516,7 +516,7 @@ class AutoBackend(nn.Module):
         # CoreML
         elif self.coreml:
             im = im[0].cpu().numpy()
-            im_pil = Image.fromarray((im * 255).astype("uint8"))
+            im_pil = Image.fromarray((im * MAX_PIXELVALUE ).astype("uint8"))
             # im = im.resize((192, 320), Image.BILINEAR)
             y = self.model.predict({"image": im_pil})  # coordinates are xywh normalized
             if "confidence" in y:

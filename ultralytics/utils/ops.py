@@ -10,7 +10,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from ultralytics.utils import LOGGER
+from ultralytics.utils import LOGGER, MAX_PIXELVALUE 
 from ultralytics.utils.metrics import batch_probiou
 
 
@@ -833,7 +833,7 @@ def convert_torch2numpy_batch(batch: torch.Tensor) -> np.ndarray:
     Returns:
         (np.ndarray): Output NumPy array batch of shape (Batch, Height, Width, Channels) and dtype uint8.
     """
-    return (batch.permute(0, 2, 3, 1).contiguous() * 255).clamp(0, 255).to(torch.uint8).cpu().numpy()
+    return (batch.permute(0, 2, 3, 1).contiguous() * MAX_PIXELVALUE ).clamp(0, 255).to(torch.uint8).cpu().numpy()
 
 
 def clean_str(s):

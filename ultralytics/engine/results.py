@@ -13,7 +13,7 @@ import numpy as np
 import torch
 
 from ultralytics.data.augment import LetterBox
-from ultralytics.utils import LOGGER, SimpleClass, ops
+from ultralytics.utils import LOGGER, SimpleClass, ops, MAX_PIXELVALUE 
 from ultralytics.utils.plotting import Annotator, colors, save_one_box
 from ultralytics.utils.torch_utils import smart_inference_mode
 
@@ -241,7 +241,7 @@ class Results(SimpleClass):
             ```
         """
         if img is None and isinstance(self.orig_img, torch.Tensor):
-            img = (self.orig_img[0].detach().permute(1, 2, 0).contiguous() * 255).to(torch.uint8).cpu().numpy()
+            img = (self.orig_img[0].detach().permute(1, 2, 0).contiguous() * MAX_PIXELVALUE).to(torch.uint8).cpu().numpy()
 
         names = self.names
         is_obb = self.obb is not None
@@ -266,7 +266,7 @@ class Results(SimpleClass):
                     .permute(2, 0, 1)
                     .flip(0)
                     .contiguous()
-                    / 255
+                    / MAX_PIXELVALUE
                 )
             idx = pred_boxes.cls if pred_boxes else range(len(pred_masks))
             annotator.masks(pred_masks.data, colors=[colors(x, True) for x in idx], im_gpu=im_gpu)

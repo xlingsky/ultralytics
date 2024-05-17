@@ -16,7 +16,7 @@ import torch
 from PIL import Image
 
 from ultralytics.data.utils import FORMATS_HELP_MSG, IMG_FORMATS, VID_FORMATS
-from ultralytics.utils import IS_COLAB, IS_KAGGLE, LOGGER, ops
+from ultralytics.utils import IS_COLAB, IS_KAGGLE, LOGGER, ops, MAX_PIXELVALUE
 from ultralytics.utils.checks import check_requirements
 
 
@@ -484,7 +484,7 @@ class LoadTensor:
                 f"WARNING ⚠️ torch.Tensor inputs should be normalized 0.0-1.0 but max value is {im.max()}. "
                 f"Dividing input by 255."
             )
-            im = im.float() / 255.0
+            im = im.float() / float(MAX_PIXELVALUE)
 
         return im
 
